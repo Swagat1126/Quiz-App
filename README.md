@@ -95,9 +95,7 @@ Scores are stored in MongoDB
 
 Leaderboard displays top scores in descending order
 
-📷 Screenshots
 
-(Add screenshots of your UI here if required by your internship or college)
 
 🚀 Future Enhancements
 
