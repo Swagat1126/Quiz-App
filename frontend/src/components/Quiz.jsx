@@ -1,37 +1,36 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Timer from "./Timer";
 
-function Quiz({ mode, setScore, setTotal, setFinished }) {
+function Quiz({ mode, difficulty, setScore, setTotal, setFinished }) {
     const [questions, setQuestions] = useState([]);
     const [current, setCurrent] = useState(0);
     const [time, setTime] = useState(0);
-    const fetched = useRef(false);
 
     useEffect(() => {
-        if (fetched.current) return;
-        fetched.current = true;
-
         const amount = mode === "rapid" ? 10 : 20;
-        const initialTime = mode === "rapid" ? 15 : 1200;
+        const totalTime = mode === "rapid" ? 15 : 1200;
 
-        setTime(initialTime);
+        setQuestions([]);
         setCurrent(0);
+        setScore(0);
+        setTime(totalTime);
 
-        const url =
-            mode === "rapid"
-                ? "https://opentdb.com/api.php?amount=10&category=9&difficulty=easy&type=multiple"
-                : "https://opentdb.com/api.php?amount=20&category=9&difficulty=medium&type=multiple";
-
-        fetch(url)
+        fetch(
+            `https://quizapi.io/api/v1/questions?category=code&difficulty=${difficulty}&limit=${amount}`,
+            {
+                headers: {
+                    "X-Api-Key": import.meta.env.VITE_QUIZ_API_KEY,
+                },
+            }
+        )
             .then(res => res.json())
             .then(data => {
-                const results = data?.results || [];
-                setQuestions(results);
-                setTotal(results.length);
+                setQuestions(data);
+                setTotal(data.length);
             });
-    }, [mode, setTotal]);
+    }, [mode, difficulty]);
 
-    const nextQuestion = () => {
+    const next = () => {
         if (current + 1 >= questions.length) {
             setFinished(true);
         } else {
@@ -40,62 +39,57 @@ function Quiz({ mode, setScore, setTotal, setFinished }) {
         }
     };
 
-    if (questions.length === 0) {
-        return <p className="text-white text-xl">Loading...</p>;
+    if (!questions.length) {
+        return <p className="text-white">Loading...</p>;
     }
 
     const q = questions[current];
-    const options = [...q.incorrect_answers];
-    options.splice(
-        Math.floor(Math.random() * (options.length + 1)),
-        0,
-        q.correct_answer
-    );
+    const options = Object.entries(q.answers).filter(([_, v]) => v);
 
     return (
-        <div className="bg-white p-6 rounded-2xl shadow-2xl w-96">
-            <h2 className="font-bold mb-2">
-                Question {current + 1} of {questions.length}
-            </h2>
+        <div className="bg-white p-6 rounded-xl w-96">
 
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+            {/* Question info */}
+            <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>
+                    Question {current + 1} of {questions.length}
+                </span>
+                <span className="capitalize font-semibold">{difficulty}</span>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full bg-gray-200 h-2 rounded mb-4">
                 <div
-                    className="bg-blue-500 h-2 rounded-full transition-all"
+                    className="h-2 bg-blue-500 rounded transition-all"
                     style={{
-                        width: `${((current + 1) / questions.length) * 100}%`
+                        width: `${((current + 1) / questions.length) * 100}%`,
                     }}
-                ></div>
+                />
             </div>
 
             <Timer
                 time={time}
                 setTime={setTime}
-                onTimeUp={mode === "rapid" ? nextQuestion : () => setFinished(true)}
+                totalTime={mode === "rapid" ? 15 : 1200}
+                onTimeUp={next}
             />
 
-            <p
-                className="my-4 font-medium"
-                dangerouslySetInnerHTML={{ __html: q.question }}
-            />
+            <p className="font-semibold mb-4">{q.question}</p>
 
-            <div className="grid gap-3">
-                {options.map((opt, i) => (
-                    <button
-                        key={i}
-                        className="w-full px-4 py-3 rounded-lg border bg-white text-gray-800
-                       hover:bg-blue-500 hover:text-white hover:scale-[1.02]
-                       transition-all shadow"
-                        onClick={() => {
-                            if (opt === q.correct_answer) {
-                                setScore(s => s + 1);
-                            }
-                            nextQuestion();
-                        }}
-                        dangerouslySetInnerHTML={{ __html: opt }}
-                    />
-                ))}
-            </div>
+            {options.map(([key, value]) => (
+                <button
+                    key={key}
+                    onClick={() => {
+                        if (q.correct_answers[`${key}_correct`] === "true") {
+                            setScore(s => s + 1);
+                        }
+                        next();
+                    }}
+                    className="w-full mb-2 p-3 border rounded hover:bg-blue-500 hover:text-white"
+                >
+                    {value}
+                </button>
+            ))}
         </div>
     );
 }

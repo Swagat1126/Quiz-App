@@ -7,24 +7,14 @@ function Result({ username, score, total, reset }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: username, score }),
         });
-    }, [username, score]);
+    }, []);
 
     return (
-        <div className="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center animate-fadeIn">
-            <h2 className="text-3xl font-bold mb-2">🎉 Quiz Completed</h2>
+        <div className="bg-white p-6 rounded-xl text-center w-96">
+            <h2 className="text-2xl font-bold mb-2">Quiz Completed 🎉</h2>
+            <p className="mb-4">{username} scored {score} / {total}</p>
 
-            <p className="text-gray-600 mb-1">
-                Player: <b>{username}</b>
-            </p>
-
-            <p className="text-xl font-bold text-green-600 mb-4">
-                Score: {score} / {total}
-            </p>
-
-            <button
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition shadow"
-                onClick={reset}
-            >
+            <button onClick={reset} className="bg-indigo-600 text-white px-6 py-2 rounded">
                 Play Again
             </button>
         </div>

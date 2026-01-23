@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-function Timer({ time, setTime, onTimeUp }) {
+function Timer({ time, setTime, totalTime, onTimeUp }) {
     useEffect(() => {
         if (time === 0) {
             onTimeUp();
@@ -11,12 +11,17 @@ function Timer({ time, setTime, onTimeUp }) {
         return () => clearInterval(id);
     }, [time, onTimeUp, setTime]);
 
+    const percent = (time / totalTime) * 100;
+
     return (
-        <div className="flex items-center gap-2 mb-4">
-            <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
-            <span className="font-semibold text-red-600">
-                Time Left: {time}s
-            </span>
+        <div className="mb-4">
+            <div className="w-full bg-gray-200 h-2 rounded">
+                <div
+                    className="h-2 bg-green-500 rounded"
+                    style={{ width: `${percent}%` }}
+                />
+            </div>
+            <p className="text-sm text-red-600 mt-1">Time Left: {time}s</p>
         </div>
     );
 }
